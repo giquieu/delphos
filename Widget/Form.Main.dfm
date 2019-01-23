@@ -53,27 +53,6 @@ object FormMain: TFormMain
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 3
   end
-  object ListBox: TListBox
-    Left = 8
-    Top = 51
-    Width = 353
-    Height = 46
-    DoubleBuffered = True
-    ItemHeight = 13
-    Items.Strings = (
-      'AD'
-      'ASD'
-      'ASD'
-      'ASD'
-      'ASDA'
-      'SDA'
-      'SDAS'
-      'DA'
-      'SD'
-      'ASD')
-    ParentDoubleBuffered = False
-    TabOrder = 4
-  end
   object SQLConnection: TSQLConnection
     Left = 192
     Top = 216

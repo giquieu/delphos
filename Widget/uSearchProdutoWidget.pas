@@ -16,12 +16,14 @@ type
 
   ISearchProdutoRepository = interface
     ['{C3CD03EF-A38E-49D9-AE7B-2546669A75A8}']
-    function FindProdutoByDescricao(ADescricao: String): TObjectList<TProduto>;
+    function FindAll: TObjectList<TProduto>;
+    function FindProdutoByDescricao(AFilter: TPredicate<String>): TObjectList<TProduto>;
   end;
 
   TSearchProdutoRepository = class(TInterfacedObject, ISearchProdutoRepository)
   public
-    function FindProdutoByDescricao(ADescricao: String): TObjectList<TProduto>;
+    function FindAll: TObjectList<TProduto>;
+    function FindProdutoByDescricao(AFilter: TPredicate<String>): TObjectList<TProduto>;
   end;
 
   TSearchProdutoWidget = class(TComponent)
@@ -97,8 +99,7 @@ end;
 
 procedure TSearchProdutoWidget.OnEditChange(Sender: TObject);
 begin
-  FSearchRepositoryTask := TTask.Run(FEdit, OnSearchRepository);
-  FSearchRepositoryTask.Start;
+  FSearchRepositoryTask := TTask.Run(FEdit, OnSearchRepository).Start;
 end;
 
 procedure TSearchProdutoWidget.OnEditEnter(Sender: TObject);
@@ -113,32 +114,41 @@ end;
 
 procedure TSearchProdutoWidget.OnSearchRepository(Sender: TObject);
 var
-  I: Integer;
   Produto: TProduto;
   Produtos: TObjectList<TProduto>;
 begin
-  if (Length(TEdit(Sender).Text) = 0) then
+  Produto  := Nil;
+  Produtos := Nil;
+  if (Length(TEdit(Sender).Text) = 0) or (Length(TEdit(Sender).Text) >= 5) then
   begin
-    Notify(Sender);
-  end
-  else
-  if (Length(TEdit(Sender).Text) >= 5) then
-  begin
-    Produtos := FSearchRepository.FindProdutoByDescricao(TEdit(Sender).Text);
-    for I := 0 to Pred(Produtos.Count) do
+    if (Length(TEdit(Sender).Text) >= 5) then
     begin
-      Produto := Produtos[I];
+      Produtos := FSearchRepository.FindProdutoByDescricao(
+        function(ADescricao: String) : Boolean
+        begin
+          Result := ADescricao.ToLower.Contains(String(TEdit(Sender).Text).ToLower);
+        end
+      );
       TThread.Queue(TThread.CurrentThread,
         procedure
+        var I: Integer;
         begin
-          FListBox.Items.Add(Produto.Descricao);
+          for I := 0 to Pred(Produtos.Count) do
+          begin
+            Produto := Produtos[I];
+            FListBox.Items.Add(Produto.Descricao);
+          end;
         end
       );
     end;
     TThread.Queue(TThread.CurrentThread,
       procedure
       begin
-        FListBox.Visible := True;
+        if (Length(TEdit(Sender).Text) = 0) then
+        begin
+          FListBox.Items.Clear;
+        end;
+        FListBox.Visible := FListBox.Items.Count > 0;
       end
     );
     Notify(Sender);
@@ -152,14 +162,34 @@ end;
 
 { TSearchRepository }
 
-function TSearchProdutoRepository.FindProdutoByDescricao(ADescricao: String): TObjectList<TProduto>;
+function TSearchProdutoRepository.FindAll: TObjectList<TProduto>;
 begin
-  Result := TObjectList<TProduto>.Create;
+  Result := TObjectList<TProduto>.Create(True);
   Result.Add(TProduto.Create('Banana'));
   Result.Add(TProduto.Create('Maca'));
   Result.Add(TProduto.Create('Iogurte'));
   Result.Add(TProduto.Create('Salame'));
   Result.Add(TProduto.Create('Pao de Padeiro'));
+end;
+
+function TSearchProdutoRepository.FindProdutoByDescricao(AFilter: TPredicate<String>): TObjectList<TProduto>;
+var
+  Produto: TProduto;
+  Produtos: TObjectList<TProduto>;
+begin
+  Result := TObjectList<TProduto>.Create(True);
+  Produtos := FindAll;
+  try
+    for Produto in Produtos do
+    begin
+      if (AFilter(Produto.Descricao)) then
+      begin
+        Result.Add(TProduto.Create(Produto));
+      end;
+    end;
+  finally
+    Produtos.Free;
+  end;
 end;
 
 end.

@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, System.Classes, SysUtils, Forms, Data.FMTBcd, Data.DB, Data.SqlExpr, Vcl.Controls, Vcl.StdCtrls,
-  Connection.Interfaces, Graphics, System.Threading, uSearchProdutoWidget, Model.Produto;
+  Graphics, System.Threading, uSearchProdutoWidget, Model.Produto;
 
 type
 
@@ -15,7 +15,6 @@ type
     EditSearchProduto: TEdit;
     Edit1: TEdit;
     MemoLog: TMemo;
-    ListBox: TListBox;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
@@ -31,17 +30,11 @@ var
 
 implementation
 
-uses
-  Connection.Fabrica;
-
 {$R *.dfm}
 
 procedure TFormMain.Button1Click(Sender: TObject);
-var
-  Connection: IConnection;
 begin
-  Connection := TConnectionFabrica.New.GetConnection();
-//  Connection.Open;
+  //Connection.Open;
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
